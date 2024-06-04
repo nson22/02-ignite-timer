@@ -14,12 +14,18 @@ import {
 
 const newCiclyFormValidationSchema = z.object({
   task: z.string().min(1, "Informe uma tarefa"),
-  minutesAmountInput: z.number().min(5).max(60),
+  minutesAmount: z.number().min(5).max(60),
 });
 
+type NewCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
+
 export function Home() {
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCiclyFormValidationSchema),
+    defaultValues: {
+      task: "",
+      minutesAmount: 0,
+    },
   });
 
   function handleCreateNewCycle(data) {
