@@ -20,7 +20,7 @@ const newCiclyFormValidationSchema = z.object({
 type NewCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
 
 export function Home() {
-  const { register, handleSubmit, watch } = useForm<NewCycleFormData>({
+  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCiclyFormValidationSchema),
     defaultValues: {
       task: "",
@@ -28,8 +28,9 @@ export function Home() {
     },
   });
 
-  function handleCreateNewCycle(data) {
+  function handleCreateNewCycle(data: NewCycleFormData) {
     console.log(data);
+    reset();
   }
 
   const isTaskFullfilled = watch("task");
