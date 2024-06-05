@@ -5,13 +5,16 @@ import { z } from "zod";
 import { differenceInSeconds } from "date-fns/differenceInSeconds";
 import { HomeContainer } from "./style";
 import { NewCycleForm } from "./components/NewCycleForm";
+import {
+  StartCountdownButton,
+  StopCountdownButton,
+} from "./components/NewCycleForm/style";
+import { HandPalm, Play } from "phosphor-react";
+import { Countdown } from "./components/Countdown";
 
-const newCiclyFormValidationSchema = z.object({
-  task: z.string().min(1, "Informe uma tarefa"),
-  minutesAmount: z.number().min(1).max(60),
-});
 
-type NewCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
+
+
 
 interface Cycle {
   id: string;
@@ -23,53 +26,13 @@ interface Cycle {
 }
 
 export function Home() {
-  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
-    resolver: zodResolver(newCiclyFormValidationSchema),
-    defaultValues: {
-      task: "",
-      minutesAmount: 0,
-    },
-  });
 
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
-  const [minutesAmountPassed, setMinutesAmountPassed] = useState(0);
 
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
 
-  useEffect(() => {
-    let interval: number;
-
-    if (activeCycle) {
-      interval = setInterval(() => {
-        const secondsDifference = differenceInSeconds(
-          new Date(),
-          activeCycle.startedAt
-        );
-
-        if (secondsDifference >= totalSeconds) {
-          setCycles((state) =>
-            state.map((cycle) => {
-              if (cycle.id === activeCycleId) {
-                return { ...cycle, finishedAt: new Date() };
-              } else {
-                return cycle;
-              }
-            })
-          );
-          setMinutesAmountPassed(totalSeconds);
-          clearInterval(interval);
-        } else {
-          setMinutesAmountPassed(secondsDifference);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [activeCycle, activeCycleId, totalSeconds]);
+ 
 
   function handleCreateCycle({ task, minutesAmount }: NewCycleFormData) {
     const id = new Date().getTime().toString();
@@ -117,8 +80,24 @@ export function Home() {
 
   return (
     <HomeContainer>
-      <NewCycleForm />
-      <NewCycleForm />
+      <form onSubmit={handleSubmit(handleCreateCycle)}>
+        <NewCycleForm />
+        <Countdown />
+        {activeCycle ? (
+          <StopCountdownButton data-testid="btn-stop" onClick={handleStopCycle}>
+            <HandPalm size={24} />
+            Interromper
+          </StopCountdownButton>
+        ) : (
+          <StartCountdownButton
+            disabled={!isTaskFullfilled}
+            data-testid="btn-start"
+          >
+            <Play size={24} />
+            Começar
+          </StartCountdownButton>
+        )}
+      </form>
     </HomeContainer>
   );
 }
