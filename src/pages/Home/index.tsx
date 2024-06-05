@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { HandPalm, Play } from "phosphor-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { differenceInSeconds } from "date-fns/differenceInSeconds";
 import {
   CountdownContainder,
   FormContainder,
@@ -13,21 +14,21 @@ import {
   StopCountdownButton,
   TaskInput,
 } from "./style";
-import { differenceInSeconds } from "date-fns/differenceInSeconds";
 
 const newCiclyFormValidationSchema = z.object({
   task: z.string().min(1, "Informe uma tarefa"),
-  minutesAmount: z.number().min(5).max(60),
+  minutesAmount: z.number().min(1).max(60),
 });
 
 type NewCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
 
 interface Cycle {
-  id: string
-  task: string
-  minutesAmount: number
-  startedAt: Date
-  interruptedAt?: Date
+  id: string;
+  task: string;
+  minutesAmount: number;
+  startedAt: Date;
+  interruptedAt?: Date;
+  finishedAt?: Date;
 }
 
 export function Home() {
@@ -39,74 +40,89 @@ export function Home() {
     },
   });
 
-  const [cycles, setCycles] = useState<Cycle[]>([])
-  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
-  const [minutesAmountPassed, setMinutesAmountPassed] = useState(0)
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
+  const [minutesAmountPassed, setMinutesAmountPassed] = useState(0);
 
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
 
   useEffect(() => {
-    let interval: number
+    let interval: number;
 
     if (activeCycle) {
       interval = setInterval(() => {
-        setMinutesAmountPassed(differenceInSeconds(new Date(), activeCycle.startedAt))
-      }, 1000)
+        const secondsDifference = differenceInSeconds(
+          new Date(),
+          activeCycle.startedAt
+        );
+
+        if (secondsDifference >= totalSeconds) {
+          setCycles((state) =>
+            state.map((cycle) => {
+              if (cycle.id === activeCycleId) {
+                return { ...cycle, finishedAt: new Date() };
+              } else {
+                return cycle;
+              }
+            })
+          );
+          setMinutesAmountPassed(totalSeconds);
+          clearInterval(interval);
+        } else {
+          setMinutesAmountPassed(secondsDifference);
+        }
+      }, 1000);
     }
 
     return () => {
-      clearInterval(interval)
-    }
-  }, [activeCycle])
-
+      clearInterval(interval);
+    };
+  }, [activeCycle, activeCycleId, totalSeconds]);
 
   function handleCreateCycle({ task, minutesAmount }: NewCycleFormData) {
-    const id = new Date().getTime().toString()
+    const id = new Date().getTime().toString();
 
     const newCycle: Cycle = {
       id,
       task,
       minutesAmount,
-      startedAt: new Date()
-    }
+      startedAt: new Date(),
+    };
 
-    setCycles((state) => [...state, newCycle])
-    setActiveCycleId(id)
-    setMinutesAmountPassed(0)
+    setCycles((state) => [...state, newCycle]);
+    setActiveCycleId(id);
+    setMinutesAmountPassed(0);
     reset();
   }
 
-
-  const totalMinutes = activeCycle ? activeCycle.minutesAmount * 60 : 0
-  const currentSeconds = activeCycle ? totalMinutes - minutesAmountPassed : 0
-  const minutesAmount = Math.floor(currentSeconds / 60)
-  const secondsAmount = currentSeconds % 60
-  const minutes = String(minutesAmount).padStart(2, "0")
-  const seconds = String(secondsAmount).padStart(2, "0")
+  const currentSeconds = activeCycle ? totalSeconds - minutesAmountPassed : 0;
+  const minutesAmount = Math.floor(currentSeconds / 60);
+  const secondsAmount = currentSeconds % 60;
+  const minutes = String(minutesAmount).padStart(2, "0");
+  const seconds = String(secondsAmount).padStart(2, "0");
 
   useEffect(() => {
     if (activeCycle) {
-      document.title = `${minutes}:${seconds}`
+      document.title = `${minutes}:${seconds}`;
     }
-  }, [minutes, seconds, activeCycle])
-
+  }, [minutes, seconds, activeCycle]);
 
   const isTaskFullfilled = watch("task");
 
   function handleStopCycle() {
-    setCycles(cycles.map((cycle) => {
-      if (cycle.id === activeCycleId) {
-        return { ...cycle, interruptedAt: new Date() }
-      } else {
-        return cycle
-      }
-    }),
-    )
+    setCycles(
+      cycles.map((cycle) => {
+        if (cycle.id === activeCycleId) {
+          return { ...cycle, interruptedAt: new Date() };
+        } else {
+          return cycle;
+        }
+      })
+    );
 
-    setActiveCycleId(null)
+    setActiveCycleId(null);
   }
-
-  console.log(activeCycle);
 
   return (
     <HomeContainer>
@@ -114,7 +130,7 @@ export function Home() {
         <FormContainder>
           <label htmlFor="task">Vou trabalhar em</label>
           <TaskInput
-            data-testid="task-input"
+            data-testid="inp-task"
             type="text"
             placeholder="Dê um nome para seu projeto"
             id="task"
@@ -131,9 +147,9 @@ export function Home() {
           <label htmlFor="minutesAmount">durante</label>
           <MinutesAmountInput
             type="number"
-            data-testid="minutes-amount-input"
+            data-testid="inp-minutesAmount"
             step={5}
-            min={5}
+            min={1}
             max={60}
             placeholder="00"
             id="minutesAmount"
@@ -145,27 +161,27 @@ export function Home() {
         </FormContainder>
 
         <CountdownContainder>
-          <span data-testid="hour">{minutes[0]}</span>
-          <span data-testid="minutes">{minutes[1]}</span>
+          <span data-testid="minutesOne">{minutes[0]}</span>
+          <span data-testid="minutesTwo">{minutes[1]}</span>
           <Separator>:</Separator>
-          <span data-testid="seconds-1">{seconds[0]}</span>
-          <span data-testid="seconds-2">{seconds[1]}</span>
+          <span data-testid="secondsOne">{seconds[0]}</span>
+          <span data-testid="secondsTwo">{seconds[1]}</span>
         </CountdownContainder>
 
-        {activeCycle ? <StopCountdownButton
-          data-testid="stop-button"
-          onClick={handleStopCycle}
-        >
-          <HandPalm size={24} />
-          Interromper
-        </StopCountdownButton> : <StartCountdownButton
-          disabled={!isTaskFullfilled}
-          data-testid="start-button"
-        >
-          <Play size={24} />
-          Começar
-        </StartCountdownButton>}
-
+        {activeCycle ? (
+          <StopCountdownButton data-testid="btn-stop" onClick={handleStopCycle}>
+            <HandPalm size={24} />
+            Interromper
+          </StopCountdownButton>
+        ) : (
+          <StartCountdownButton
+            disabled={!isTaskFullfilled}
+            data-testid="btn-start"
+          >
+            <Play size={24} />
+            Começar
+          </StartCountdownButton>
+        )}
       </form>
     </HomeContainer>
   );
