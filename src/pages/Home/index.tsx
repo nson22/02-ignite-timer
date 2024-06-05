@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { Play } from "phosphor-react";
+import { HandPalm, Play } from "phosphor-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -9,6 +9,7 @@ import {
   MinutesAmountInput,
   Separator,
   StartCountdownButton,
+  StopCountdownButton,
   TaskInput,
 } from "./style";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ interface Cycle {
   task: string
   minutesAmount: number
   startedAt: Date
+  interruptedAt?: Date
 }
 
 export function Home() {
@@ -58,7 +60,7 @@ export function Home() {
   }, [activeCycle])
 
 
-  function handleCreateNewCycle({ task, minutesAmount }: NewCycleFormData) {
+  function handleCreateCycle({ task, minutesAmount }: NewCycleFormData) {
     const id = new Date().getTime().toString()
 
     const newCycle: Cycle = {
@@ -91,9 +93,24 @@ export function Home() {
 
   const isTaskFullfilled = watch("task");
 
+  function handleStopCycle() {
+    setCycles(cycles.map((cycle) => {
+      if (cycle.id === activeCycleId) {
+        return { ...cycle, interruptedAt: new Date() }
+      } else {
+        return cycle
+      }
+    }),
+    )
+
+    setActiveCycleId(null)
+  }
+
+  console.log(activeCycle);
+
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(handleCreateNewCycle)}>
+      <form onSubmit={handleSubmit(handleCreateCycle)}>
         <FormContainder>
           <label htmlFor="task">Vou trabalhar em</label>
           <TaskInput
@@ -103,6 +120,7 @@ export function Home() {
             id="task"
             list="task-suggestion"
             required
+            disabled={!!activeCycle}
             {...register("task")}
           />
 
@@ -120,6 +138,7 @@ export function Home() {
             placeholder="00"
             id="minutesAmount"
             required
+            disabled={!!activeCycle}
             {...register("minutesAmount", { valueAsNumber: true })}
           />
           <span>minutos.</span>
@@ -133,13 +152,20 @@ export function Home() {
           <span data-testid="seconds-2">{seconds[1]}</span>
         </CountdownContainder>
 
-        <StartCountdownButton
+        {activeCycle ? <StopCountdownButton
+          data-testid="stop-button"
+          onClick={handleStopCycle}
+        >
+          <HandPalm size={24} />
+          Interromper
+        </StopCountdownButton> : <StartCountdownButton
           disabled={!isTaskFullfilled}
           data-testid="start-button"
         >
           <Play size={24} />
           Começar
-        </StartCountdownButton>
+        </StartCountdownButton>}
+
       </form>
     </HomeContainer>
   );
