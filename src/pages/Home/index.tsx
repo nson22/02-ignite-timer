@@ -1,19 +1,10 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { HandPalm, Play } from "phosphor-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { differenceInSeconds } from "date-fns/differenceInSeconds";
-import {
-  CountdownContainder,
-  FormContainder,
-  HomeContainer,
-  MinutesAmountInput,
-  Separator,
-  StartCountdownButton,
-  StopCountdownButton,
-  TaskInput,
-} from "./style";
+import { HomeContainer } from "./style";
+import { NewCycleForm } from "./components/NewCycleForm";
 
 const newCiclyFormValidationSchema = z.object({
   task: z.string().min(1, "Informe uma tarefa"),
@@ -126,63 +117,8 @@ export function Home() {
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(handleCreateCycle)}>
-        <FormContainder>
-          <label htmlFor="task">Vou trabalhar em</label>
-          <TaskInput
-            data-testid="inp-task"
-            type="text"
-            placeholder="Dê um nome para seu projeto"
-            id="task"
-            list="task-suggestion"
-            required
-            disabled={!!activeCycle}
-            {...register("task")}
-          />
-
-          <datalist id="task-suggestion">
-            <option>Projeto one</option>
-          </datalist>
-
-          <label htmlFor="minutesAmount">durante</label>
-          <MinutesAmountInput
-            type="number"
-            data-testid="inp-minutesAmount"
-            step={5}
-            min={1}
-            max={60}
-            placeholder="00"
-            id="minutesAmount"
-            required
-            disabled={!!activeCycle}
-            {...register("minutesAmount", { valueAsNumber: true })}
-          />
-          <span>minutos.</span>
-        </FormContainder>
-
-        <CountdownContainder>
-          <span data-testid="minutesOne">{minutes[0]}</span>
-          <span data-testid="minutesTwo">{minutes[1]}</span>
-          <Separator>:</Separator>
-          <span data-testid="secondsOne">{seconds[0]}</span>
-          <span data-testid="secondsTwo">{seconds[1]}</span>
-        </CountdownContainder>
-
-        {activeCycle ? (
-          <StopCountdownButton data-testid="btn-stop" onClick={handleStopCycle}>
-            <HandPalm size={24} />
-            Interromper
-          </StopCountdownButton>
-        ) : (
-          <StartCountdownButton
-            disabled={!isTaskFullfilled}
-            data-testid="btn-start"
-          >
-            <Play size={24} />
-            Começar
-          </StartCountdownButton>
-        )}
-      </form>
+      <NewCycleForm />
+      <NewCycleForm />
     </HomeContainer>
   );
 }
