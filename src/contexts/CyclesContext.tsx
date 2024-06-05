@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useState } from "react";
+import { ReactNode, createContext, useReducer, useState } from "react";
 
 interface newCycleFormData {
   task: string;
@@ -31,31 +31,97 @@ interface CyclesContextProviderProps {
   children: ReactNode;
 }
 
+enum CycleActions {
+  CREATE,
+  STOP,
+  DONE,
+}
+
+interface CyclesState {
+  cycles: Cycle[];
+  activeCycleId: string | null;
+}
+
 export function CyclesContextProvider({
   children,
 }: CyclesContextProviderProps) {
-  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [cyclesState, dispatch] = useReducer(
+    (state: CyclesState, action: any) => {
+      if (action.type === CycleActions.CREATE) {
+        return {
+          ...state,
+          cycles: [...state.cycles, action.payload.newCycle],
+          activeCycleId: action.payload.newCycle.id,
+        };
+      }
 
-  const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
+      if (action.type === CycleActions.STOP) {
+        return {
+          ...state,
+          cycles: state.cycles.map((cycle) => {
+            if (cycle.id === state.activeCycleId) {
+              return { ...cycle, interruptedAt: new Date() };
+            } else {
+              return cycle;
+            }
+          }),
+          activeCycleId: null,
+        };
+      }
+
+      return state;
+    },
+    {
+      cycles: [],
+      activeCycleId: null,
+    }
+  );
 
   const [minutesAmountPassed, setMinutesAmountPassed] = useState(0);
 
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
+  const { cycles, activeCycleId } = cyclesState;
 
-  function setCurrentCycleAsDone() {
-    setCycles((state) =>
-      state.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          return { ...cycle, finishedAt: new Date() };
-        } else {
-          return cycle;
-        }
-      })
-    );
-  }
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
 
   function setSecondsAmount(seconds: number) {
     setMinutesAmountPassed(seconds);
+  }
+
+  function setCurrentCycleAsDone() {
+    // setCycles((state) =>
+    //   state.map((cycle) => {
+    //     if (cycle.id === activeCycleId) {
+    //       return { ...cycle, finishedAt: new Date() };
+    //     } else {
+    //       return cycle;
+    //     }
+    //   })
+    // );
+    dispatch({
+      type: CycleActions.DONE,
+      payload: {
+        activeCycleId,
+      },
+    });
+  }
+
+  function stopCurrentCycle() {
+    // setCycles(
+    // cycles.map((cycle) => {
+    //   if (cycle.id === activeCycleId) {
+    //     return { ...cycle, interruptedAt: new Date() };
+    //   } else {
+    //     return cycle;
+    //   }
+    // })
+    // );
+
+    dispatch({
+      type: CycleActions.STOP,
+      payload: {
+        activeCycleId,
+      },
+    });
   }
 
   function createNewCycle({ task, minutesAmount }: newCycleFormData) {
@@ -68,24 +134,15 @@ export function CyclesContextProvider({
       startedAt: new Date(),
     };
 
-    setCycles((state) => [...state, newCycle]);
-    setActiveCycleId(id);
+    // setCycles((state) => [...state, newCycle]);
+    dispatch({
+      type: CycleActions.CREATE,
+      payload: {
+        newCycle,
+      },
+    });
     setMinutesAmountPassed(0);
     // reset();
-  }
-
-  function stopCurrentCycle() {
-    setCycles(
-      cycles.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          return { ...cycle, interruptedAt: new Date() };
-        } else {
-          return cycle;
-        }
-      })
-    );
-
-    setActiveCycleId(null);
   }
 
   return (
