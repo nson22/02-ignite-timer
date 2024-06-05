@@ -11,6 +11,7 @@ import {
   StartCountdownButton,
   TaskInput,
 } from "./style";
+import { useState } from "react";
 
 const newCiclyFormValidationSchema = z.object({
   task: z.string().min(1, "Informe uma tarefa"),
@@ -19,7 +20,17 @@ const newCiclyFormValidationSchema = z.object({
 
 type NewCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
 
+interface Cycle {
+  id: string
+  task: string
+  minutesAmount: number
+}
+
 export function Home() {
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [minutesAmountPassed, setMinutesAmountPassed] = useState(0)
+
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCiclyFormValidationSchema),
     defaultValues: {
@@ -28,13 +39,33 @@ export function Home() {
     },
   });
 
-  function handleCreateNewCycle(data: NewCycleFormData) {
-    console.log(data);
+
+
+  function handleCreateNewCycle({ task, minutesAmount }: NewCycleFormData) {
+    const id = new Date().getTime().toString()
+
+    const newCycle: Cycle = {
+      id,
+      task,
+      minutesAmount
+    }
+
+    setCycles((state) => [...state, newCycle])
+    setActiveCycleId(id)
+
     reset();
   }
 
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  const totalMinutes = activeCycle ? activeCycle.minutesAmount * 60 : 0
+  const currentSeconds = activeCycle ? totalMinutes - minutesAmountPassed : 0
+  const minutesAmount = Math.floor(currentSeconds / 60)
+  const secondsAmount = currentSeconds % 60
+  const minutes = String(minutesAmount).padStart(2, "0")
+  const seconds = String(secondsAmount).padStart(2, "0")
+
   const isTaskFullfilled = watch("task");
-  const isMinutesAmountFullfilled = watch("minutesAmount");
 
   return (
     <HomeContainer>
@@ -71,15 +102,15 @@ export function Home() {
         </FormContainder>
 
         <CountdownContainder>
-          <span data-testid="hour">0</span>
-          <span data-testid="minutes">0</span>
+          <span data-testid="hour">{minutes[0]}</span>
+          <span data-testid="minutes">{minutes[1]}</span>
           <Separator>:</Separator>
-          <span data-testid="seconds-1">0</span>
-          <span data-testid="seconds-2">0</span>
+          <span data-testid="seconds-1">{seconds[0]}</span>
+          <span data-testid="seconds-2">{seconds[1]}</span>
         </CountdownContainder>
 
         <StartCountdownButton
-          disabled={!isTaskFullfilled && !isMinutesAmountFullfilled}
+          disabled={!isTaskFullfilled}
           data-testid="start-button"
         >
           <Play size={24} />
