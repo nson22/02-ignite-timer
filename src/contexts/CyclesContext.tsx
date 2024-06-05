@@ -47,29 +47,43 @@ export function CyclesContextProvider({
 }: CyclesContextProviderProps) {
   const [cyclesState, dispatch] = useReducer(
     (state: CyclesState, action: any) => {
-      if (action.type === CycleActions.CREATE) {
-        return {
-          ...state,
-          cycles: [...state.cycles, action.payload.newCycle],
-          activeCycleId: action.payload.newCycle.id,
-        };
-      }
+      switch (action.type) {
+        case CycleActions.CREATE:
+          return {
+            ...state,
+            cycles: [...state.cycles, action.payload.newCycle],
+            activeCycleId: action.payload.newCycle.id,
+          };
 
-      if (action.type === CycleActions.STOP) {
-        return {
-          ...state,
-          cycles: state.cycles.map((cycle) => {
-            if (cycle.id === state.activeCycleId) {
-              return { ...cycle, interruptedAt: new Date() };
-            } else {
-              return cycle;
-            }
-          }),
-          activeCycleId: null,
-        };
-      }
+        case CycleActions.STOP:
+          return {
+            ...state,
+            cycles: state.cycles.map((cycle) => {
+              if (cycle.id === state.activeCycleId) {
+                return { ...cycle, interruptedAt: new Date() };
+              } else {
+                return cycle;
+              }
+            }),
+            activeCycleId: null,
+          };
 
-      return state;
+        case CycleActions.DONE:
+          return {
+            ...state,
+            cycles: state.cycles.map((cycle) => {
+              if (cycle.id === state.activeCycleId) {
+                return { ...cycle, finishedAt: new Date() };
+              } else {
+                return cycle;
+              }
+            }),
+            activeCycleId: null,
+          };
+
+        default:
+          return state;
+      }
     },
     {
       cycles: [],
@@ -88,15 +102,6 @@ export function CyclesContextProvider({
   }
 
   function setCurrentCycleAsDone() {
-    // setCycles((state) =>
-    //   state.map((cycle) => {
-    //     if (cycle.id === activeCycleId) {
-    //       return { ...cycle, finishedAt: new Date() };
-    //     } else {
-    //       return cycle;
-    //     }
-    //   })
-    // );
     dispatch({
       type: CycleActions.DONE,
       payload: {
@@ -106,16 +111,6 @@ export function CyclesContextProvider({
   }
 
   function stopCurrentCycle() {
-    // setCycles(
-    // cycles.map((cycle) => {
-    //   if (cycle.id === activeCycleId) {
-    //     return { ...cycle, interruptedAt: new Date() };
-    //   } else {
-    //     return cycle;
-    //   }
-    // })
-    // );
-
     dispatch({
       type: CycleActions.STOP,
       payload: {
@@ -134,7 +129,6 @@ export function CyclesContextProvider({
       startedAt: new Date(),
     };
 
-    // setCycles((state) => [...state, newCycle]);
     dispatch({
       type: CycleActions.CREATE,
       payload: {
@@ -142,7 +136,6 @@ export function CyclesContextProvider({
       },
     });
     setMinutesAmountPassed(0);
-    // reset();
   }
 
   return (
