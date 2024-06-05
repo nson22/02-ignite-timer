@@ -17,12 +17,13 @@ const newCiclyFormValidationSchema = z.object({
   minutesAmount: z.number().min(1).max(60),
 });
 
-type NewCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
+type newCycleFormData = z.infer<typeof newCiclyFormValidationSchema>;
 
 export function Home() {
   const { createNewCycle, stopCurrentCycle, activeCycle } =
     useContext(CycleContext);
-  const newCycleForm = useForm<NewCycleFormData>({
+
+  const newCycleForm = useForm<newCycleFormData>({
     resolver: zodResolver(newCiclyFormValidationSchema),
     defaultValues: {
       task: "",
@@ -30,13 +31,18 @@ export function Home() {
     },
   });
 
-  const { handleSubmit, watch } = newCycleForm;
+  const { handleSubmit, watch, reset } = newCycleForm;
 
   const isTaskFullfilled = watch("task");
 
+  function handleCreateNewCycle({ task, minutesAmount }: newCycleFormData) {
+    createNewCycle({ task, minutesAmount });
+    reset();
+  }
+
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(createNewCycle)}>
+      <form onSubmit={handleSubmit(handleCreateNewCycle)}>
         <FormProvider {...newCycleForm}>
           <NewCycleForm />
         </FormProvider>

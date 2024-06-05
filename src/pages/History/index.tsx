@@ -24,10 +24,10 @@ export function History() {
                 return (
                   <tr>
                     <td>{cycle.task}</td>
-                    <td>{cycle.minutesAmount}</td>
+                    <td>{cycle.minutesAmount} min</td>
                     <td>{cycle.startedAt.toString()}</td>
                     <td>
-                      <Status statusColor="yellow">{cycle.id}</Status>
+                      <Status statusColor="green">{cycle.id}</Status>
                     </td>
                   </tr>
                 );
