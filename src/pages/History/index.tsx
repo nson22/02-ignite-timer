@@ -22,12 +22,20 @@ export function History() {
             <tbody>
               {cycles.map((cycle) => {
                 return (
-                  <tr>
+                  <tr key={cycle.id}>
                     <td>{cycle.task}</td>
                     <td>{cycle.minutesAmount} min</td>
-                    <td>{cycle.startedAt.toString()}</td>
+                    <td>{cycle.startedAt.toISOString()}</td>
                     <td>
-                      <Status statusColor="green">{cycle.id}</Status>
+                      {cycle.finishedAt && (
+                        <Status statusColor="green">Concluído</Status>
+                      )}
+                      {cycle.interruptedAt && (
+                        <Status statusColor="red">Interrompido</Status>
+                      )}
+                      {!cycle.finishedAt && !cycle.interruptedAt && (
+                        <Status statusColor="yellow">Em andamento</Status>
+                      )}
                     </td>
                   </tr>
                 );
