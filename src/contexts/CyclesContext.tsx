@@ -1,5 +1,6 @@
 import { ReactNode, createContext, useReducer, useState } from "react";
-import { Cycle, CycleActions, CycleReduce } from "../reduces/Cycles";
+import { setAsDoneCycleAction, stopCycleAction, createNewCycleAction } from "../reducers/cycles/actions";
+import { Cycle, CycleReduce } from "../reducers/cycles/cycle";
 
 interface newCycleFormData {
   task: string;
@@ -47,21 +48,11 @@ export function CyclesContextProvider({
   }
 
   function setCurrentCycleAsDone() {
-    dispatch({
-      type: CycleActions.DONE,
-      payload: {
-        activeCycleId,
-      },
-    });
+    dispatch(setAsDoneCycleAction());
   }
 
   function stopCurrentCycle() {
-    dispatch({
-      type: CycleActions.STOP,
-      payload: {
-        activeCycleId,
-      },
-    });
+    dispatch(stopCycleAction());
   }
 
   function createNewCycle({ task, minutesAmount }: newCycleFormData) {
@@ -74,12 +65,7 @@ export function CyclesContextProvider({
       startedAt: new Date(),
     };
 
-    dispatch({
-      type: CycleActions.CREATE,
-      payload: {
-        newCycle,
-      },
-    });
+    dispatch(createNewCycleAction(newCycle));
     setMinutesAmountPassed(0);
   }
 

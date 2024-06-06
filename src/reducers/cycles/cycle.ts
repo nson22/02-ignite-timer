@@ -1,8 +1,5 @@
-export enum CycleActions {
-    CREATE = "CREATE",
-    STOP = "STOP",
-    DONE = "DONE",
-}
+import { CycleActions } from "./actions";
+
 
 export interface Cycle {
     id: string;
