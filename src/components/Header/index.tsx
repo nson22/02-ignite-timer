@@ -8,10 +8,10 @@ export function Header() {
     <HeaderContainer>
       <img src={igniteLogo} alt="" />
       <nav>
-        <NavLink to="/" title="Temporizador">
+        <NavLink to="/" title="Temporizador" data-testid="lnk-timer">
           <Timer size={24} />
         </NavLink>
-        <NavLink to="/history" title="Histórico">
+        <NavLink to="/history" title="Histórico" data-testid="lnk-history">
           <Scroll size={24} />
         </NavLink>
       </nav>
