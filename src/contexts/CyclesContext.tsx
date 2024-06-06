@@ -1,5 +1,6 @@
 import { ReactNode, createContext, useReducer, useState } from "react";
-import { Cycle, CycleReduce } from "../reduces/CycleReduce";
+import { setAsDoneCycleAction, stopCycleAction, createNewCycleAction } from "../reducers/cycles/actions";
+import { Cycle, CycleReduce } from "../reducers/cycles/cycle";
 
 interface newCycleFormData {
   task: string;
@@ -23,13 +24,17 @@ interface CyclesContextProviderProps {
   children: ReactNode;
 }
 
+
 export function CyclesContextProvider({
   children,
 }: CyclesContextProviderProps) {
-  const [cyclesState, dispatch] = useReducer(CycleReduce(), {
-    cycles: [],
-    activeCycleId: null,
-  });
+  const [cyclesState, dispatch] = useReducer(
+    CycleReduce(),
+    {
+      cycles: [],
+      activeCycleId: null,
+    }
+  );
 
   const [minutesAmountPassed, setMinutesAmountPassed] = useState(0);
 
@@ -42,21 +47,11 @@ export function CyclesContextProvider({
   }
 
   function setCurrentCycleAsDone() {
-    dispatch({
-      type: CycleActions.DONE,
-      payload: {
-        activeCycleId,
-      },
-    });
+    dispatch(setAsDoneCycleAction());
   }
 
   function stopCurrentCycle() {
-    dispatch({
-      type: CycleActions.STOP,
-      payload: {
-        activeCycleId,
-      },
-    });
+    dispatch(stopCycleAction());
   }
 
   function createNewCycle({ task, minutesAmount }: newCycleFormData) {
@@ -69,12 +64,7 @@ export function CyclesContextProvider({
       startedAt: new Date(),
     };
 
-    dispatch({
-      type: CycleActions.CREATE,
-      payload: {
-        newCycle,
-      },
-    });
+    dispatch(createNewCycleAction(newCycle));
     setMinutesAmountPassed(0);
   }
 
