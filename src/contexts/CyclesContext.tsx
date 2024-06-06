@@ -1,17 +1,9 @@
 import { ReactNode, createContext, useReducer, useState } from "react";
+import { Cycle, CycleReduce } from "../reduces/CycleReduce";
 
 interface newCycleFormData {
   task: string;
   minutesAmount: number;
-}
-
-interface Cycle {
-  id: string;
-  task: string;
-  minutesAmount: number;
-  startedAt: Date;
-  interruptedAt?: Date;
-  finishedAt?: Date;
 }
 
 interface CycleContextType {
@@ -31,65 +23,13 @@ interface CyclesContextProviderProps {
   children: ReactNode;
 }
 
-enum CycleActions {
-  CREATE,
-  STOP,
-  DONE,
-}
-
-interface CyclesState {
-  cycles: Cycle[];
-  activeCycleId: string | null;
-}
-
 export function CyclesContextProvider({
   children,
 }: CyclesContextProviderProps) {
-  const [cyclesState, dispatch] = useReducer(
-    (state: CyclesState, action: any) => {
-      switch (action.type) {
-        case CycleActions.CREATE:
-          return {
-            ...state,
-            cycles: [...state.cycles, action.payload.newCycle],
-            activeCycleId: action.payload.newCycle.id,
-          };
-
-        case CycleActions.STOP:
-          return {
-            ...state,
-            cycles: state.cycles.map((cycle) => {
-              if (cycle.id === state.activeCycleId) {
-                return { ...cycle, interruptedAt: new Date() };
-              } else {
-                return cycle;
-              }
-            }),
-            activeCycleId: null,
-          };
-
-        case CycleActions.DONE:
-          return {
-            ...state,
-            cycles: state.cycles.map((cycle) => {
-              if (cycle.id === state.activeCycleId) {
-                return { ...cycle, finishedAt: new Date() };
-              } else {
-                return cycle;
-              }
-            }),
-            activeCycleId: null,
-          };
-
-        default:
-          return state;
-      }
-    },
-    {
-      cycles: [],
-      activeCycleId: null,
-    }
-  );
+  const [cyclesState, dispatch] = useReducer(CycleReduce(), {
+    cycles: [],
+    activeCycleId: null,
+  });
 
   const [minutesAmountPassed, setMinutesAmountPassed] = useState(0);
 
